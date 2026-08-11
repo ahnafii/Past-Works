@@ -16,82 +16,84 @@ export type Item = {
 	Stats: {[string]: number}?,
 }
 
+-- Demo imagery uses real Roblox Creator Store asset thumbnails.
+-- Replace these IDs with your own uploaded assets for a production game.
 local Items: {[string]: Item} = {
 	iron_sword = {
 		Id = "iron_sword", Name = "Iron Sword",
 		Description = "A dependable blade for new adventurers. Balanced, practical, and easy to maintain.",
 		Category = "Weapons", Price = 250, Currency = "Coins", Rarity = "Common",
-		Icon = "rbxassetid://108289954", Stackable = false, MaxOwned = 1, Featured = true,
+		Icon = "rbxthumb://type=Asset&id=32503823&w=420&h=420", Stackable = false, MaxOwned = 1, Featured = true,
 		Stats = {Damage = 15},
 	},
 	emberblade = {
 		Id = "emberblade", Name = "Emberblade",
 		Description = "A warm-edged sword forged around a fragment of volcanic glass.",
 		Category = "Weapons", Price = 850, Currency = "Coins", Rarity = "Rare",
-		Icon = "rbxassetid://13576835112", Stackable = false, MaxOwned = 1, Featured = true,
+		Icon = "rbxthumb://type=Asset&id=591117575&w=420&h=420", Stackable = false, MaxOwned = 1, Featured = true,
 		Stats = {Damage = 31, Crit = 8},
 	},
 	hunters_bow = {
 		Id = "hunters_bow", Name = "Hunter's Bow",
 		Description = "A light bow built for quick shots and long days outside the walls.",
 		Category = "Weapons", Price = 620, Currency = "Coins", Rarity = "Uncommon",
-		Icon = "rbxthumb://type=Asset&id=110892267&w=420&h=420", Stackable = false, MaxOwned = 1,
+		Icon = "rbxthumb://type=Asset&id=107152546&w=420&h=420", Stackable = false, MaxOwned = 1, Featured = true,
 		Stats = {Damage = 22, Range = 34},
 	},
 	frost_staff = {
 		Id = "frost_staff", Name = "Frost Staff",
 		Description = "A polished staff that leaves a thin trail of frost behind every spell.",
 		Category = "Weapons", Price = 1450, Currency = "Gems", Rarity = "Epic",
-		Icon = "rbxthumb://type=Asset&id=26421972&w=420&h=420", Stackable = false, MaxOwned = 1, Featured = true,
+		Icon = "rbxthumb://type=Asset&id=107447440&w=420&h=420", Stackable = false, MaxOwned = 1, Featured = true,
 		Stats = {Damage = 44, Slow = 18},
 	},
 	shadow_dagger = {
 		Id = "shadow_dagger", Name = "Shadow Dagger",
 		Description = "A narrow blade prized by scouts who prefer to leave no trace.",
 		Category = "Weapons", Price = 2200, Currency = "Coins", Rarity = "Legendary",
-		Icon = "rbxthumb://type=Asset&id=432461081&w=420&h=420", Stackable = false, MaxOwned = 1,
+		Icon = "rbxthumb://type=Asset&id=432461081&w=420&h=420", Stackable = false, MaxOwned = 1, Featured = true,
 		Stats = {Damage = 57, Crit = 18},
 	},
 	explorers_lantern = {
 		Id = "explorers_lantern", Name = "Explorer's Lantern",
 		Description = "A reliable lantern with enough oil for a full night beyond the trail.",
 		Category = "Tools", Price = 340, Currency = "Coins", Rarity = "Common",
-		Icon = "rbxassetid://73327046", Stackable = false, MaxOwned = 1,
+		Icon = "rbxthumb://type=Asset&id=5294979517&w=420&h=420", Stackable = false, MaxOwned = 1, Featured = true,
 		Stats = {Radius = 24},
 	},
 	grappling_hook = {
 		Id = "grappling_hook", Name = "Grappling Hook",
 		Description = "A compact climbing tool for reaching ledges that would otherwise be out of reach.",
 		Category = "Tools", Price = 780, Currency = "Coins", Rarity = "Uncommon",
-		Icon = "rbxassetid://96884975458245", Stackable = false, MaxOwned = 1,
+		Icon = "rbxthumb://type=Asset&id=4619656413&w=420&h=420", Stackable = false, MaxOwned = 1,
 		Stats = {Range = 48},
 	},
 	health_potion = {
 		Id = "health_potion", Name = "Health Potion",
 		Description = "Restores a portion of health when consumed. Always worth keeping one close.",
 		Category = "Consumables", Price = 90, Currency = "Coins", Rarity = "Common",
-		Icon = "rbxassetid://17667761024", Stackable = true, MaxOwned = 25,
+		Icon = "rbxthumb://type=Asset&id=17667761024&w=420&h=420", Stackable = true, MaxOwned = 25, Featured = true,
 		Stats = {Healing = 35},
 	},
 	focus_elixir = {
 		Id = "focus_elixir", Name = "Focus Elixir",
 		Description = "A concentrated tonic that briefly improves ability recovery.",
 		Category = "Consumables", Price = 160, Currency = "Coins", Rarity = "Uncommon",
-		Icon = "rbxthumb://type=Asset&id=55982813&w=420&h=420", Stackable = true, MaxOwned = 15,
+		Icon = "rbxthumb://type=Asset&id=7874914000&w=420&h=420", Stackable = true, MaxOwned = 15,
 		Stats = {Duration = 30},
 	},
 	traveler_pack = {
 		Id = "traveler_pack", Name = "Traveler's Pack",
 		Description = "A sturdy pack with enough room for the essentials on a long expedition.",
 		Category = "Miscellaneous", Price = 540, Currency = "Coins", Rarity = "Uncommon",
-		Icon = "rbxassetid://6870729307", Stackable = false, MaxOwned = 1,
+		Icon = "rbxthumb://type=Asset&id=139246392&w=420&h=420", Stackable = false, MaxOwned = 1,
 		Stats = {Capacity = 12},
 	},
 	guild_token = {
 		Id = "guild_token", Name = "Guild Token",
 		Description = "A polished token accepted by guild merchants for special services.",
 		Category = "Miscellaneous", Price = 15, Currency = "Gems", Rarity = "Rare",
-		Icon = "rbxthumb://type=Asset&id=124126528&w=420&h=420", Stackable = true, MaxOwned = 50,
+		Icon = "rbxthumb://type=Asset&id=4937522724&w=420&h=420", Stackable = true, MaxOwned = 50,
 	},
 }
 
