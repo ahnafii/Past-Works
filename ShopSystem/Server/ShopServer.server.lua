@@ -5,8 +5,9 @@ local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 
-local ShopConfig = require(script.Parent.Parent.Shared.ShopConfig)
-local Items = require(script.Parent.Parent.Shared.ItemCatalog)
+local shared = ReplicatedStorage:WaitForChild("ShopSystem"):WaitForChild("Shared")
+local ShopConfig = require(shared:WaitForChild("ShopConfig"))
+local Items = require(shared:WaitForChild("ItemCatalog"))
 
 local remotes = ReplicatedStorage:FindFirstChild("ShopRemotes") or Instance.new("Folder")
 remotes.Name = "ShopRemotes"
@@ -54,6 +55,7 @@ local function sanitizeState(raw: any): PlayerState
 	if type(raw) ~= "table" then
 		return state
 	end
+
 	if type(raw.Currencies) == "table" then
 		for currency in ShopConfig.Currencies do
 			if type(raw.Currencies[currency]) == "number" then
@@ -61,6 +63,7 @@ local function sanitizeState(raw: any): PlayerState
 			end
 		end
 	end
+
 	if type(raw.Inventory) == "table" then
 		for itemId, quantity in raw.Inventory do
 			local item = Items[itemId]
@@ -70,6 +73,7 @@ local function sanitizeState(raw: any): PlayerState
 			end
 		end
 	end
+
 	return state
 end
 
@@ -77,10 +81,12 @@ local function loadState(player: Player): PlayerState
 	local success, data = pcall(function()
 		return store:GetAsync(("player_%d"):format(player.UserId))
 	end)
+
 	if not success then
 		warn(("[Shop] Failed to load %s: %s"):format(player.Name, tostring(data)))
 		return cloneDefaults()
 	end
+
 	return sanitizeState(data)
 end
 
@@ -89,17 +95,20 @@ local function saveState(player: Player)
 	if not state then
 		return
 	end
+
 	local payload = {
 		Version = ShopConfig.Version,
 		Currencies = state.Currencies,
 		Inventory = state.Inventory,
 		SavedAt = os.time(),
 	}
+
 	local success, err = pcall(function()
 		store:UpdateAsync(("player_%d"):format(player.UserId), function()
 			return payload
 		end)
 	end)
+
 	if not success then
 		warn(("[Shop] Failed to save %s: %s"):format(player.Name, tostring(err)))
 	end
@@ -116,18 +125,22 @@ local function validRequest(player: Player, itemId: any, quantity: any): (boolea
 	if type(itemId) ~= "string" or #itemId < 1 or #itemId > 64 then
 		return false, "Invalid item."
 	end
+
 	if type(quantity) ~= "number" or quantity ~= quantity or quantity % 1 ~= 0 then
 		return false, "Invalid quantity."
 	end
+
 	if quantity < 1 or quantity > ShopConfig.MaxPurchaseQuantity then
 		return false, "Invalid quantity."
 	end
+
 	local now = os.clock()
 	local last = purchaseTimes[player] or 0
 	if now - last < ShopConfig.PurchaseCooldown then
 		return false, "Please slow down."
 	end
 	purchaseTimes[player] = now
+
 	return true
 end
 
@@ -143,15 +156,18 @@ local function purchaseItem(player: Player, itemId: any, quantity: any)
 		return {Success = false, Code = "UNAVAILABLE", Message = "That item is unavailable."}
 	end
 
-	if item.Currency == nil or ShopConfig.Currencies[item.Currency] == nil then
+	local currency = ShopConfig.Currencies[item.Currency]
+	if not currency then
 		return {Success = false, Code = "CONFIGURATION", Message = "That item is not configured correctly."}
 	end
 
 	local owned = state.Inventory[itemId] or 0
 	local maxOwned = item.MaxOwned or math.huge
+
 	if not item.Stackable and owned > 0 then
 		return {Success = false, Code = "OWNED", Message = "You already own this item."}
 	end
+
 	if owned + quantity > maxOwned then
 		return {Success = false, Code = "LIMIT", Message = ("You can only hold %d of this item."):format(maxOwned)}
 	end
@@ -164,25 +180,34 @@ local function purchaseItem(player: Player, itemId: any, quantity: any)
 	local price = item.Price * quantity
 	local balance = state.Currencies[item.Currency] or 0
 	if balance < price then
-		return {Success = false, Code = "FUNDS", Message = ("You need %s %d more."):format(ShopConfig.Currencies[item.Currency].DisplayName, price - balance)}
+		return {
+			Success = false,
+			Code = "FUNDS",
+			Message = ("You need %s %d more."):format(currency.DisplayName, price - balance),
+		}
 	end
 
 	-- The server is the only authority over the economic mutation.
 	state.Currencies[item.Currency] = balance - price
 	state.Inventory[itemId] = owned + quantity
+
 	if available ~= nil then
 		serverStock[itemId] = available - quantity
 	end
 
-	stateChanged:FireClient(player, publicState(state))
+	local newState = publicState(state)
+	stateChanged:FireClient(player, newState)
+
 	return {
 		Success = true,
 		Code = "PURCHASED",
-		Message = (quantity > 1 and ("Purchased %dx %s."):format(quantity, item.Name) or ("Purchased %s."):format(item.Name)),
+		Message = quantity > 1
+			and ("Purchased %dx %s."):format(quantity, item.Name)
+			or ("Purchased %s."):format(item.Name),
 		ItemId = itemId,
 		Quantity = quantity,
 		TransactionId = HttpService:GenerateGUID(false),
-		State = publicState(state),
+		State = newState,
 	}
 end
 
