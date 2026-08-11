@@ -147,7 +147,7 @@ local function updateCard(card: Frame, item: any, selected: boolean)
 
 	card.Media.ItemImage.Image = item.Icon
 	card.Media.RarityBar.BackgroundColor3 = rarity
-	card.Name.Text = item.Name
+	card.ItemName.Text = item.Name
 	card.Rarity.Text = string.upper(item.Rarity)
 	card.Rarity.TextColor3 = rarity
 	card.CurrencyIcon.Image = currency.Icon
@@ -173,7 +173,7 @@ local function updateDetails(item: any)
 	details.Media.RarityMark.BackgroundColor3 = rarity
 	details.Rarity.Text = string.upper(item.Rarity)
 	details.Rarity.TextColor3 = rarity
-	details.Name.Text = item.Name
+	details.ItemName.Text = item.Name
 	details.Description.Text = item.Description
 	details.Ownership.Text = item.Stackable and ("Owned " .. owned .. "  /  " .. (item.MaxOwned or "∞")) or (owned > 0 and "Owned" or "Not owned")
 
