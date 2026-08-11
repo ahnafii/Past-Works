@@ -1,0 +1,36 @@
+{
+  "name": "Past-Works",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "ShopSystem": {
+        "$className": "Folder",
+        "Shared": {
+          "$path": "ShopSystem/Shared"
+        }
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "ShopSystem": {
+        "$className": "Folder",
+        "ShopServer": {
+          "$path": "ShopSystem/Server/ShopServer.server.lua"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "ShopSystem": {
+          "$className": "Folder",
+          "ShopClient": {
+            "$path": "ShopSystem/Client/ShopClient.client.lua"
+          }
+        }
+      }
+    }
+  }
+}
