@@ -116,10 +116,13 @@ local function updateCategoryVisuals()
 	for _, button in categories:GetChildren() do
 		if button:IsA("TextButton") then
 			local active = button.Name == selectedCategory
-			button.BackgroundColor3 = active and Color3.fromRGB(30, 38, 46) or Color3.fromRGB(20, 25, 32)
-			button.TextColor3 = active and Color3.fromRGB(245, 247, 250) or Color3.fromRGB(145, 155, 168)
+			button.BackgroundColor3 = active and Color3.fromRGB(28, 37, 45) or Color3.fromRGB(15, 19, 25)
+			button.TextColor3 = active and Color3.fromRGB(244, 246, 249) or Color3.fromRGB(151, 160, 172)
 			local border = button:FindFirstChild("Border")
-			if border and border:IsA("UIStroke") then border.Transparency = active and 0.3 or 0.7 end
+			if border and border:IsA("UIStroke") then
+				border.Color = active and Color3.fromRGB(68, 180, 148) or Color3.fromRGB(49, 59, 70)
+				border.Transparency = active and 0.25 or 0.72
+			end
 		end
 	end
 end
@@ -134,12 +137,12 @@ local function updateCard(card: Frame, item: any, selected: boolean)
 	local owned = playerState.Inventory[item.Id] or 0
 
 	card.Visible = true
-	card.BackgroundColor3 = selected and Color3.fromRGB(29, 38, 46) or Color3.fromRGB(20, 25, 32)
+	card.BackgroundColor3 = selected and Color3.fromRGB(28, 37, 45) or Color3.fromRGB(15, 19, 25)
 
 	local border = card:FindFirstChild("Border")
 	if border and border:IsA("UIStroke") then
 		border.Color = rarity
-		border.Transparency = selected and 0.12 or 0.68
+		border.Transparency = selected and 0.18 or 0.68
 	end
 
 	card.Media.ItemImage.Image = item.Icon
@@ -189,19 +192,19 @@ local function updateDetails(item: any)
 		if rowIndex > 3 then break end
 		local row = details.Stats:FindFirstChild("Row" .. rowIndex) :: TextLabel
 		row.Text = string.upper(statName) .. "   " .. tostring(item.Stats[statName])
-		row.TextColor3 = rowIndex == 1 and Color3.fromRGB(245, 247, 250) or Color3.fromRGB(185, 193, 203)
+		row.TextColor3 = rowIndex == 1 and Color3.fromRGB(244, 246, 249) or Color3.fromRGB(185, 193, 203)
 		row.Visible = true
 		rowIndex += 1
 	end
 
 	if rowIndex == 1 then
 		details.Stats.Row1.Text = "NO ADDITIONAL STATS"
-		details.Stats.Row1.TextColor3 = Color3.fromRGB(105, 116, 130)
+		details.Stats.Row1.TextColor3 = Color3.fromRGB(101, 113, 128)
 		details.Stats.Row1.Visible = true
 	end
 
 	local canPurchase = true
-	local hint = "Purchase is validated by the server"
+	local hint = "Validated securely by the server"
 	if not item.Stackable and owned > 0 then
 		canPurchase = false
 		hint = "Already owned"
@@ -211,8 +214,8 @@ local function updateDetails(item: any)
 	end
 
 	details.Purchase:SetAttribute("CanPurchase", canPurchase)
-	details.Purchase.BackgroundColor3 = canPurchase and Color3.fromRGB(71, 178, 146) or Color3.fromRGB(57, 66, 77)
-	details.Purchase.TextColor3 = canPurchase and Color3.fromRGB(7, 20, 17) or Color3.fromRGB(145, 155, 168)
+	details.Purchase.BackgroundColor3 = canPurchase and Color3.fromRGB(68, 180, 148) or Color3.fromRGB(49, 59, 70)
+	details.Purchase.TextColor3 = canPurchase and Color3.fromRGB(6, 20, 16) or Color3.fromRGB(151, 160, 172)
 	details.Purchase.Text = canPurchase and ("PURCHASE  /  " .. formatNumber(item.Price) .. " " .. string.upper(currency.DisplayName)) or hint
 	details.PurchaseHint.Text = canPurchase and hint or ""
 
@@ -264,7 +267,7 @@ end
 local function hideModal()
 	modal.Visible = false
 	modalItemId = nil
-	overlay.BackgroundTransparency = 0.24
+	overlay.BackgroundTransparency = 0.28
 end
 
 local function showModal(item: any)
@@ -275,7 +278,7 @@ local function showModal(item: any)
 	modal.Price.Text = formatNumber(item.Price) .. " " .. string.upper(currency.DisplayName)
 	modal.Message.Text = "Confirm this purchase. The server will validate the item, price, balance, ownership, and request."
 	modal.Visible = true
-	overlay.BackgroundTransparency = 0.08
+	overlay.BackgroundTransparency = 0.10
 end
 
 local function showToast(title: string, message: string, success: boolean)
@@ -286,7 +289,7 @@ local function showToast(title: string, message: string, success: boolean)
 	toast.BackgroundTransparency = 1
 	toast.Title.Text = title
 	toast.Message.Text = message
-	toast.Accent.BackgroundColor3 = success and Color3.fromRGB(71, 178, 146) or Color3.fromRGB(216, 91, 97)
+	toast.Accent.BackgroundColor3 = success and Color3.fromRGB(68, 180, 148) or Color3.fromRGB(211, 88, 96)
 	tween(toast, 0.14, {BackgroundTransparency = 0})
 	task.delay(3.2, function()
 		if toast.Parent then
@@ -310,7 +313,7 @@ local function openShop()
 	gui.Enabled = true
 	overlay.BackgroundTransparency = 1
 	window.Position = UDim2.fromScale(0.5, 0.53)
-	tween(overlay, 0.14, {BackgroundTransparency = 0.24})
+	tween(overlay, 0.14, {BackgroundTransparency = 0.28})
 	tween(window, 0.18, {Position = UDim2.fromScale(0.5, 0.5)})
 end
 
@@ -320,12 +323,12 @@ local function applyResponsive()
 
 	local width = camera.ViewportSize.X
 	isMobile = width < 720
-	window.WindowConstraint.MinSize = isMobile and Vector2.new(320, 420) or Vector2.new(720, 520)
+	window.WindowConstraint.MinSize = isMobile and Vector2.new(320, 420) or Vector2.new(760, 540)
 
 	if isMobile then
 		window.Size = UDim2.fromScale(0.95, 0.92)
 		gridLayout.FillDirectionMaxCells = 2
-		gridLayout.CellSize = UDim2.new(0.5, -5, 0, 190)
+		gridLayout.CellSize = UDim2.new(0.5, -5, 0, 176)
 		details.Size = UDim2.fromScale(1, 1)
 		details.Position = UDim2.fromScale(0, 0)
 		details.AnchorPoint = Vector2.zero
@@ -335,17 +338,18 @@ local function applyResponsive()
 		header.Wallet.Visible = false
 		header.Title.TextSize = 21
 	else
-		window.Size = width < 980 and UDim2.fromScale(0.93, 0.88) or UDim2.fromScale(0.88, 0.86)
-		gridLayout.FillDirectionMaxCells = 2
-		gridLayout.CellSize = UDim2.new(0.5, -5, 0, 190)
+		window.Size = width < 980 and UDim2.fromScale(0.94, 0.89) or UDim2.fromScale(0.91, 0.86)
+		local columns = width < 1120 and 2 or 3
+		gridLayout.FillDirectionMaxCells = columns
+		gridLayout.CellSize = UDim2.new(1 / columns, -6, 0, 176)
 		details.AnchorPoint = Vector2.new(1, 0)
 		details.Position = UDim2.new(1, 0, 0, 0)
-		details.Size = UDim2.new(width < 980 and 0.39 or 0.35, -1, 1, 0)
+		details.Size = UDim2.new(width < 980 and 0.39 or 0.32, -1, 1, 0)
 		details.Visible = true
 		details.Back.Visible = false
 		gridContainer.Visible = true
 		header.Wallet.Visible = true
-		header.Title.TextSize = 25
+		header.Title.TextSize = 26
 		header.Subtitle.Text = "Gear, supplies, and useful things for the road."
 	end
 	updateWallet()
@@ -381,7 +385,7 @@ for index = 1, config.MaxVisibleCards do
 		local visible = getVisibleItems()
 		local item = visible[index]
 		if item and item.Id ~= selectedId then
-			tween(card, 0.1, {BackgroundColor3 = Color3.fromRGB(26, 33, 41)})
+			tween(card, 0.1, {BackgroundColor3 = Color3.fromRGB(23, 30, 37)})
 		end
 	end)
 
