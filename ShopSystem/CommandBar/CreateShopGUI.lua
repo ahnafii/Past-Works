@@ -401,7 +401,7 @@ make("TextLabel", "Rarity", details, {
 	Position = UDim2.fromOffset(0, 164),
 	Size = UDim2.new(1, 0, 0, 16),
 })
-make("TextLabel", "Name", details, {
+make("TextLabel", "ItemName", details, {
 	BackgroundTransparency = 1,
 	Font = Enum.Font.GothamBold,
 	Text = "Iron Sword",
@@ -522,7 +522,7 @@ for index = 1, 24 do
 		Size = UDim2.fromOffset(3, 22),
 	})
 
-	make("TextLabel", "Name", card, {
+	make("TextLabel", "ItemName", card, {
 		BackgroundTransparency = 1,
 		Font = Enum.Font.GothamBold,
 		Text = "",
