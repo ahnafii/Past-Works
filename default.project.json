@@ -28,6 +28,9 @@
           "$className": "Folder",
           "ShopClient": {
             "$path": "ShopSystem/Client/ShopClient.client.lua"
+          },
+          "ShopToggle": {
+            "$path": "ShopSystem/Client/ShopToggle.client.lua"
           }
         }
       }
