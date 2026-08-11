@@ -14,6 +14,13 @@ if existing then
 	existing:Destroy()
 end
 
+local overlay = gui:FindFirstChild("Overlay")
+if overlay and overlay:IsA("Frame") then
+	overlay.Visible = false
+end
+
+gui.Enabled = true
+
 local function make(className: string, name: string, parent: Instance, properties: {[string]: any}?): Instance
 	local object = Instance.new(className)
 	object.Name = name
@@ -69,4 +76,4 @@ make("TextLabel", "Label", button, {
 	ZIndex = 101,
 })
 
-print("ShopToggle installed. It is now a normal StarterGui instance and is controlled by ShopToggle.client.lua.")
+print("ShopToggle installed. The shop starts closed and the launcher remains visible when the shop is closed.")
