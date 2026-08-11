@@ -1,0 +1,4 @@
+# Toolchain used by Past-Works.
+# Rojo is pinned so contributors get the same CLI version as the Studio plugin.
+[tools]
+rojo = "rojo-rbx/rojo@7.7.0"
