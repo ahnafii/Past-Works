@@ -12,8 +12,9 @@ local purchaseRemote = remotes:WaitForChild("PurchaseItem") :: RemoteFunction
 local getStateRemote = remotes:WaitForChild("GetState") :: RemoteFunction
 local stateChanged = remotes:WaitForChild("StateChanged") :: RemoteEvent
 
-local config = require(script.Parent.Parent.Shared.ShopConfig)
-local items = require(script.Parent.Parent.Shared.ItemCatalog)
+local shared = ReplicatedStorage:WaitForChild("ShopSystem"):WaitForChild("Shared")
+local config = require(shared:WaitForChild("ShopConfig"))
+local items = require(shared:WaitForChild("ItemCatalog"))
 
 local overlay = gui.Overlay :: Frame
 local window = overlay.Window :: Frame
@@ -41,7 +42,6 @@ local isMobile = false
 local detailOpenOnMobile = false
 local modalItemId: string? = nil
 local toastSerial = 0
-
 local sortModes = {"Featured", "Price: Low", "Price: High", "Rarity", "A-Z"}
 local sortIndex = 1
 
@@ -50,9 +50,7 @@ local function formatNumber(value: number): string
 	while true do
 		local replaced, count = text:gsub("^(%-?%d+)(%d%d%d)", "%1,%2")
 		text = replaced
-		if count == 0 then
-			break
-		end
+		if count == 0 then break end
 	end
 	return text
 end
@@ -66,8 +64,8 @@ local function rarityColor(rarity: string): Color3
 	return definition and definition.Color or config.Rarities.Common.Color
 end
 
-local function currencyDefinition(currencyName: string)
-	return config.Currencies[currencyName]
+local function getCurrency(name: string)
+	return config.Currencies[name]
 end
 
 local function getVisibleItems(): {any}
@@ -75,12 +73,8 @@ local function getVisibleItems(): {any}
 	local query = string.lower(search.Text)
 
 	for _, item in items do
-		local categoryMatches = selectedCategory == "Featured"
-			and item.Featured == true
-			or item.Category == selectedCategory
-		local searchMatches = query == ""
-			or string.find(string.lower(item.Name), query, 1, true) ~= nil
-
+		local categoryMatches = selectedCategory == "Featured" and item.Featured == true or item.Category == selectedCategory
+		local searchMatches = query == "" or string.find(string.lower(item.Name), query, 1, true) ~= nil
 		if categoryMatches and searchMatches then
 			table.insert(result, item)
 		end
@@ -94,53 +88,40 @@ local function getVisibleItems(): {any}
 		elseif sortMode == "Rarity" then
 			local aOrder = config.Rarities[a.Rarity].Order
 			local bOrder = config.Rarities[b.Rarity].Order
-			if aOrder == bOrder then
-				return a.Name < b.Name
-			end
+			if aOrder == bOrder then return a.Name < b.Name end
 			return aOrder > bOrder
 		elseif sortMode == "A-Z" then
 			return a.Name < b.Name
 		end
-
-		if a.Featured and not b.Featured then
-			return true
-		end
-		if b.Featured and not a.Featured then
-			return false
-		end
+		if a.Featured and not b.Featured then return true end
+		if b.Featured and not a.Featured then return false end
 		return a.Name < b.Name
 	end)
 
 	return result
 end
 
-local function setCategoryVisuals()
-	for _, categoryButton in categories:GetChildren() do
-		if categoryButton:IsA("TextButton") then
-			local active = categoryButton.Name == selectedCategory
-			categoryButton.BackgroundColor3 = active
-				and Color3.fromRGB(30, 38, 46)
-				or Color3.fromRGB(20, 25, 32)
-			categoryButton.TextColor3 = active
-				and Color3.fromRGB(245, 247, 250)
-				or Color3.fromRGB(145, 155, 168)
+local function updateWallet()
+	header.Wallet.Coins.Icon.Image = config.Currencies.Coins.Icon
+	header.Wallet.Coins.Amount.Text = formatNumber(playerState.Currencies.Coins or 0)
+	header.Wallet.Gems.Icon.Image = config.Currencies.Gems.Icon
+	header.Wallet.Gems.Amount.Text = formatNumber(playerState.Currencies.Gems or 0)
 
-			local border = categoryButton:FindFirstChild("Border")
-			if border and border:IsA("UIStroke") then
-				border.Transparency = active and 0.3 or 0.7
-			end
-		end
+	if isMobile then
+		header.Subtitle.Text = string.format("Coins %s    Gems %s", formatNumber(playerState.Currencies.Coins or 0), formatNumber(playerState.Currencies.Gems or 0))
 	end
 end
 
-local function updateCurrencyDisplay()
-	local coins = playerState.Currencies.Coins or 0
-	local gems = playerState.Currencies.Gems or 0
-
-	header.Wallet.Coins.Icon.Image = config.Currencies.Coins.Icon
-	header.Wallet.Coins.Amount.Text = formatNumber(coins)
-	header.Wallet.Gems.Icon.Image = config.Currencies.Gems.Icon
-	header.Wallet.Gems.Amount.Text = formatNumber(gems)
+local function updateCategoryVisuals()
+	for _, button in categories:GetChildren() do
+		if button:IsA("TextButton") then
+			local active = button.Name == selectedCategory
+			button.BackgroundColor3 = active and Color3.fromRGB(30, 38, 46) or Color3.fromRGB(20, 25, 32)
+			button.TextColor3 = active and Color3.fromRGB(245, 247, 250) or Color3.fromRGB(145, 155, 168)
+			local border = button:FindFirstChild("Border")
+			if border and border:IsA("UIStroke") then border.Transparency = active and 0.3 or 0.7 end
+		end
+	end
 end
 
 local function updateSortButton()
@@ -149,50 +130,40 @@ end
 
 local function updateCard(card: Frame, item: any, selected: boolean)
 	local rarity = rarityColor(item.Rarity)
-	local currency = currencyDefinition(item.Currency)
+	local currency = getCurrency(item.Currency)
 	local owned = playerState.Inventory[item.Id] or 0
 
 	card.Visible = true
-	card.BackgroundColor3 = selected
-		and Color3.fromRGB(29, 38, 46)
-		or Color3.fromRGB(20, 25, 32)
+	card.BackgroundColor3 = selected and Color3.fromRGB(29, 38, 46) or Color3.fromRGB(20, 25, 32)
 
 	local border = card:FindFirstChild("Border")
 	if border and border:IsA("UIStroke") then
 		border.Color = rarity
-		border.Transparency = selected and 0.15 or 0.68
+		border.Transparency = selected and 0.12 or 0.68
 	end
 
-	local media = card.Media :: Frame
-	media.ItemImage.Image = item.Icon
-	media.RarityBar.BackgroundColor3 = rarity
-
+	card.Media.ItemImage.Image = item.Icon
+	card.Media.RarityBar.BackgroundColor3 = rarity
 	card.Name.Text = item.Name
 	card.Rarity.Text = string.upper(item.Rarity)
 	card.Rarity.TextColor3 = rarity
 	card.CurrencyIcon.Image = currency.Icon
 	card.Price.Text = formatNumber(item.Price)
 	card.Price.TextColor3 = currency.Color
-
-	if owned > 0 then
-		card.Owned.Text = item.Stackable and ("OWNED " .. tostring(owned)) or "OWNED"
-	else
-		card.Owned.Text = ""
-	end
+	card.Owned.Text = owned > 0 and (item.Stackable and ("OWNED " .. owned) or "OWNED") or ""
 end
 
-local function clearUnusedCards(startIndex: number)
-	for index = startIndex, config.MaxVisibleCards do
+local function hideUnusedCards(fromIndex: number)
+	for index = fromIndex, config.MaxVisibleCards do
 		local card = grid:FindFirstChild(string.format("Card%02d", index))
-		if card and card:IsA("Frame") then
-			card.Visible = false
-		end
+		if card and card:IsA("Frame") then card.Visible = false end
 	end
 end
 
 local function updateDetails(item: any)
+	if not item then return end
 	local rarity = rarityColor(item.Rarity)
-	local currency = currencyDefinition(item.Currency)
+	local currency = getCurrency(item.Currency)
 	local owned = playerState.Inventory[item.Id] or 0
 
 	details.Media.ItemImage.Image = item.Icon
@@ -201,128 +172,92 @@ local function updateDetails(item: any)
 	details.Rarity.TextColor3 = rarity
 	details.Name.Text = item.Name
 	details.Description.Text = item.Description
-	details.Ownership.Text = item.Stackable
-		and ("Owned " .. tostring(owned) .. "  /  " .. tostring(item.MaxOwned or "∞"))
-		or (owned > 0 and "Owned" or "Not owned")
+	details.Ownership.Text = item.Stackable and ("Owned " .. owned .. "  /  " .. (item.MaxOwned or "∞")) or (owned > 0 and "Owned" or "Not owned")
 
-	local rowIndex = 1
-	for _, row in details.Stats:GetChildren() do
-		if row:IsA("TextLabel") and row.Name:match("^Row") then
-			row.Visible = false
-		end
+	for _, child in details.Stats:GetChildren() do
+		if child:IsA("TextLabel") and child.Name:match("^Row") then child.Visible = false end
 	end
 
+	local statNames = {}
 	if item.Stats then
-		local statNames = {}
-		for statName in item.Stats do
-			table.insert(statNames, statName)
-		end
+		for statName in item.Stats do table.insert(statNames, statName) end
 		table.sort(statNames)
+	end
 
-		for _, statName in statNames do
-			if rowIndex > 3 then
-				break
-			end
-			local row = details.Stats:FindFirstChild("Row" .. rowIndex) :: TextLabel
-			local value = item.Stats[statName]
-			row.Text = string.upper(statName) .. "   " .. tostring(value)
-			row.TextColor3 = rowIndex == 1 and Color3.fromRGB(245, 247, 250) or Color3.fromRGB(185, 193, 203)
-			row.Visible = true
-			rowIndex += 1
-		end
+	local rowIndex = 1
+	for _, statName in statNames do
+		if rowIndex > 3 then break end
+		local row = details.Stats:FindFirstChild("Row" .. rowIndex) :: TextLabel
+		row.Text = string.upper(statName) .. "   " .. tostring(item.Stats[statName])
+		row.TextColor3 = rowIndex == 1 and Color3.fromRGB(245, 247, 250) or Color3.fromRGB(185, 193, 203)
+		row.Visible = true
+		rowIndex += 1
 	end
 
 	if rowIndex == 1 then
-		local row = details.Stats.Row1 :: TextLabel
-		row.Text = "NO ADDITIONAL STATS"
-		row.TextColor3 = Color3.fromRGB(105, 116, 130)
-		row.Visible = true
+		details.Stats.Row1.Text = "NO ADDITIONAL STATS"
+		details.Stats.Row1.TextColor3 = Color3.fromRGB(105, 116, 130)
+		details.Stats.Row1.Visible = true
 	end
 
-	local canBuy = true
-	local hint = ""
+	local canPurchase = true
+	local hint = "Purchase is validated by the server"
 	if not item.Stackable and owned > 0 then
-		canBuy = false
+		canPurchase = false
 		hint = "Already owned"
 	elseif item.MaxOwned and owned >= item.MaxOwned then
-		canBuy = false
+		canPurchase = false
 		hint = "Maximum owned"
 	end
 
-	details.Purchase.BackgroundColor3 = canBuy and Color3.fromRGB(71, 178, 146) or Color3.fromRGB(57, 66, 77)
-	details.Purchase.TextColor3 = canBuy and Color3.fromRGB(7, 20, 17) or Color3.fromRGB(145, 155, 168)
-	details.Purchase.Text = canBuy
-		and ("PURCHASE  /  " .. formatNumber(item.Price) .. " " .. string.upper(currency.DisplayName))
-		or hint
-	details.PurchaseHint.Text = canBuy and "Purchase is validated by the server" or ""
-	details.Purchase:SetAttribute("CanPurchase", canBuy)
+	details.Purchase:SetAttribute("CanPurchase", canPurchase)
+	details.Purchase.BackgroundColor3 = canPurchase and Color3.fromRGB(71, 178, 146) or Color3.fromRGB(57, 66, 77)
+	details.Purchase.TextColor3 = canPurchase and Color3.fromRGB(7, 20, 17) or Color3.fromRGB(145, 155, 168)
+	details.Purchase.Text = canPurchase and ("PURCHASE  /  " .. formatNumber(item.Price) .. " " .. string.upper(currency.DisplayName)) or hint
+	details.PurchaseHint.Text = canPurchase and hint or ""
 
 	if isMobile then
-		details.Visible = true
 		detailOpenOnMobile = true
-		gridContainer.Visible = false
-		details.Back.Visible = true
-	else
 		details.Visible = true
+		details.Back.Visible = true
+		gridContainer.Visible = false
 	end
 end
 
 local function selectItem(id: string)
-	local item = items[id]
-	if not item then
-		return
+	if items[id] then
+		selectedId = id
+		updateDetails(items[id])
 	end
-	selectedId = id
-	updateDetails(item)
 end
 
 local function render()
-	setCategoryVisuals()
+	updateCategoryVisuals()
 	clearSearch.Visible = search.Text ~= ""
 
 	local visible = getVisibleItems()
 	emptyState.Visible = #visible == 0
 
-	for index, item in visible do
-		if index > config.MaxVisibleCards then
-			break
-		end
-		local card = grid:FindFirstChild(string.format("Card%02d", index)) :: Frame?
-		if card then
-			updateCard(card, item, item.Id == selectedId)
-		end
-	end
-	clearUnusedCards(math.min(#visible + 1, config.MaxVisibleCards + 1))
-
 	if #visible == 0 then
 		selectedId = nil
+		hideUnusedCards(1)
 		return
 	end
 
-	local selectedStillVisible = false
+	local selectedVisible = false
 	if selectedId then
 		for _, item in visible do
-			if item.Id == selectedId then
-				selectedStillVisible = true
-				break
-			end
+			if item.Id == selectedId then selectedVisible = true break end
 		end
 	end
+	if not selectedVisible then selectedId = visible[1].Id end
 
-	if not selectedStillVisible then
-		selectedId = visible[1].Id
+	for index = 1, math.min(#visible, config.MaxVisibleCards) do
+		local item = visible[index]
+		local card = grid:FindFirstChild(string.format("Card%02d", index)) :: Frame
+		updateCard(card, item, item.Id == selectedId)
 	end
-
-	for index, item in visible do
-		if index > config.MaxVisibleCards then
-			break
-		end
-		local card = grid:FindFirstChild(string.format("Card%02d", index)) :: Frame?
-		if card then
-			updateCard(card, item, item.Id == selectedId)
-		end
-	end
-
+	hideUnusedCards(math.min(#visible + 1, config.MaxVisibleCards + 1))
 	updateDetails(items[selectedId :: string])
 end
 
@@ -334,24 +269,24 @@ end
 
 local function showModal(item: any)
 	modalItemId = item.Id
+	local currency = getCurrency(item.Currency)
 	modal.ItemImage.Image = item.Icon
 	modal.ItemName.Text = item.Name
-	modal.Price.Text = formatNumber(item.Price) .. " " .. string.upper(currencyDefinition(item.Currency).DisplayName)
-	modal.Message.Text = "Confirm that you want to purchase this item for your current " .. string.lower(currencyDefinition(item.Currency).DisplayName) .. " balance."
+	modal.Price.Text = formatNumber(item.Price) .. " " .. string.upper(currency.DisplayName)
+	modal.Message.Text = "Confirm this purchase. The server will validate the item, price, balance, ownership, and request."
 	modal.Visible = true
 	overlay.BackgroundTransparency = 0.08
 end
 
 local function showToast(title: string, message: string, success: boolean)
 	toastSerial += 1
-	local slotIndex = ((toastSerial - 1) % 4) + 1
-	local toast = toastContainer:FindFirstChild(string.format("Toast%02d", slotIndex)) :: Frame
+	local slot = ((toastSerial - 1) % 4) + 1
+	local toast = toastContainer:FindFirstChild(string.format("Toast%02d", slot)) :: Frame
 	toast.Visible = true
 	toast.BackgroundTransparency = 1
 	toast.Title.Text = title
 	toast.Message.Text = message
 	toast.Accent.BackgroundColor3 = success and Color3.fromRGB(71, 178, 146) or Color3.fromRGB(216, 91, 97)
-
 	tween(toast, 0.14, {BackgroundTransparency = 0})
 	task.delay(3.2, function()
 		if toast.Parent then
@@ -363,17 +298,11 @@ local function showToast(title: string, message: string, success: boolean)
 end
 
 local function closeShop()
-	if modal.Visible then
-		hideModal()
-		return
-	end
-
+	if modal.Visible then hideModal() return end
 	tween(overlay, 0.14, {BackgroundTransparency = 1})
 	tween(window, 0.18, {Position = UDim2.fromScale(0.5, 0.53)})
 	task.delay(0.18, function()
-		if gui.Parent then
-			gui.Enabled = false
-		end
+		if gui.Parent then gui.Enabled = false end
 	end)
 end
 
@@ -387,12 +316,11 @@ end
 
 local function applyResponsive()
 	local camera = workspace.CurrentCamera
-	if not camera then
-		return
-	end
+	if not camera then return end
 
 	local width = camera.ViewportSize.X
 	isMobile = width < 720
+	window.WindowConstraint.MinSize = isMobile and Vector2.new(320, 420) or Vector2.new(720, 520)
 
 	if isMobile then
 		window.Size = UDim2.fromScale(0.95, 0.92)
@@ -401,12 +329,14 @@ local function applyResponsive()
 		details.Size = UDim2.fromScale(1, 1)
 		details.Position = UDim2.fromScale(0, 0)
 		details.AnchorPoint = Vector2.zero
-		details.Back.Visible = detailOpenOnMobile
 		details.Visible = detailOpenOnMobile
+		details.Back.Visible = detailOpenOnMobile
 		gridContainer.Visible = not detailOpenOnMobile
+		header.Wallet.Visible = false
+		header.Title.TextSize = 21
 	else
 		window.Size = width < 980 and UDim2.fromScale(0.93, 0.88) or UDim2.fromScale(0.88, 0.86)
-		gridLayout.FillDirectionMaxCells = width < 1050 and 2 or 2
+		gridLayout.FillDirectionMaxCells = 2
 		gridLayout.CellSize = UDim2.new(0.5, -5, 0, 190)
 		details.AnchorPoint = Vector2.new(1, 0)
 		details.Position = UDim2.new(1, 0, 0, 0)
@@ -414,7 +344,11 @@ local function applyResponsive()
 		details.Visible = true
 		details.Back.Visible = false
 		gridContainer.Visible = true
+		header.Wallet.Visible = true
+		header.Title.TextSize = 25
+		header.Subtitle.Text = "Gear, supplies, and useful things for the road."
 	end
+	updateWallet()
 end
 
 local function refreshState()
@@ -423,7 +357,7 @@ local function refreshState()
 	end)
 	if success and type(result) == "table" then
 		playerState = result
-		updateCurrencyDisplay()
+		updateWallet()
 		render()
 	else
 		showToast("SHOP UNAVAILABLE", "Unable to load your shop state.", false)
@@ -443,24 +377,19 @@ for index = 1, config.MaxVisibleCards do
 	end)
 
 	selectButton.MouseEnter:Connect(function()
-		if isMobile then
-			return
-		end
-		local border = card:FindFirstChild("Border")
-		if border and border:IsA("UIStroke") and selectedId ~= getVisibleItems()[index].Id then
+		if isMobile then return end
+		local visible = getVisibleItems()
+		local item = visible[index]
+		if item and item.Id ~= selectedId then
 			tween(card, 0.1, {BackgroundColor3 = Color3.fromRGB(26, 33, 41)})
 		end
 	end)
 
 	selectButton.MouseLeave:Connect(function()
-		if isMobile then
-			return
-		end
+		if isMobile then return end
 		local visible = getVisibleItems()
 		local item = visible[index]
-		if item then
-			updateCard(card, item, item.Id == selectedId)
-		end
+		if item then updateCard(card, item, item.Id == selectedId) end
 	end)
 end
 
@@ -469,7 +398,7 @@ for _, button in categories:GetChildren() do
 		button.Activated:Connect(function()
 			selectedCategory = button.Name
 			grid.CanvasPosition = Vector2.zero
-		render()
+			render()
 		end)
 	end
 end
@@ -497,34 +426,26 @@ header.Close.Activated:Connect(closeShop)
 details.Back.Activated:Connect(function()
 	detailOpenOnMobile = false
 	details.Visible = false
+	details.Back.Visible = false
 	gridContainer.Visible = true
 end)
 
 details.Purchase.Activated:Connect(function()
-	local id = selectedId
-	if not id or not details.Purchase:GetAttribute("CanPurchase") then
-		return
-	end
-	local item = items[id]
-	if item then
-		showModal(item)
-	end
+	if not selectedId or not details.Purchase:GetAttribute("CanPurchase") then return end
+	local item = items[selectedId]
+	if item then showModal(item) end
 end)
 
 modal.Cancel.Activated:Connect(hideModal)
 modal.Confirm.Activated:Connect(function()
 	local id = modalItemId
-	if not id then
-		return
-	end
+	if not id then return end
 
 	modal.Confirm.Active = false
 	modal.Confirm.Text = "PROCESSING..."
-
 	local success, result = pcall(function()
 		return purchaseRemote:InvokeServer(id, 1)
 	end)
-
 	modal.Confirm.Active = true
 	modal.Confirm.Text = "CONFIRM"
 	hideModal()
@@ -535,10 +456,8 @@ modal.Confirm.Activated:Connect(function()
 	end
 
 	if result.Success then
-		if type(result.State) == "table" then
-			playerState = result.State
-		end
-		updateCurrencyDisplay()
+		if type(result.State) == "table" then playerState = result.State end
+		updateWallet()
 		render()
 		showToast("PURCHASE COMPLETE", result.Message or "Purchase completed.", true)
 	else
@@ -550,15 +469,13 @@ end)
 stateChanged.OnClientEvent:Connect(function(newState)
 	if type(newState) == "table" then
 		playerState = newState
-		updateCurrencyDisplay()
+		updateWallet()
 		render()
 	end
 end)
 
 UserInputService.InputBegan:Connect(function(input, processed)
-	if processed then
-		return
-	end
+	if processed then return end
 	if input.KeyCode == Enum.KeyCode.Escape then
 		if modal.Visible then
 			hideModal()
