@@ -2,8 +2,8 @@
 
 local ShopConfig = {}
 
-ShopConfig.Version = 1
-ShopConfig.DataStoreName = "PortfolioShop_v1"
+ShopConfig.Version = 2
+ShopConfig.DataStoreName = "PortfolioShop_v2"
 ShopConfig.DefaultCurrency = {
 	Coins = 2500,
 	Gems = 120,
@@ -12,22 +12,22 @@ ShopConfig.DefaultCurrency = {
 ShopConfig.Currencies = {
 	Coins = {
 		DisplayName = "Coins",
-		Symbol = "◈",
-		Color = Color3.fromRGB(244, 198, 83),
+		Icon = "rbxassetid://1053639089",
+		Color = Color3.fromRGB(231, 187, 76),
 	},
 	Gems = {
 		DisplayName = "Gems",
-		Symbol = "◇",
-		Color = Color3.fromRGB(178, 205, 255),
+		Icon = "rbxassetid://18896714246",
+		Color = Color3.fromRGB(116, 177, 235),
 	},
 }
 
 ShopConfig.Rarities = {
-	Common = {Color = Color3.fromRGB(158, 166, 178), Order = 1},
-	Uncommon = {Color = Color3.fromRGB(92, 190, 126), Order = 2},
-	Rare = {Color = Color3.fromRGB(89, 151, 224), Order = 3},
-	Epic = {Color = Color3.fromRGB(163, 112, 224), Order = 4},
-	Legendary = {Color = Color3.fromRGB(225, 164, 72), Order = 5},
+	Common = {Color = Color3.fromRGB(166, 173, 183), Order = 1},
+	Uncommon = {Color = Color3.fromRGB(83, 178, 119), Order = 2},
+	Rare = {Color = Color3.fromRGB(82, 145, 218), Order = 3},
+	Epic = {Color = Color3.fromRGB(151, 101, 215), Order = 4},
+	Legendary = {Color = Color3.fromRGB(215, 157, 66), Order = 5},
 }
 
 ShopConfig.Categories = {
@@ -41,5 +41,6 @@ ShopConfig.Categories = {
 ShopConfig.PurchaseCooldown = 0.35
 ShopConfig.MaxPurchaseQuantity = 25
 ShopConfig.StartingItemId = "iron_sword"
+ShopConfig.MaxVisibleCards = 24
 
 return ShopConfig
