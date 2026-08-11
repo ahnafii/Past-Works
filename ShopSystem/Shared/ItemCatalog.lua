@@ -35,21 +35,21 @@ local Items: {[string]: Item} = {
 		Id = "hunters_bow", Name = "Hunter's Bow",
 		Description = "A light bow built for quick shots and long days outside the walls.",
 		Category = "Weapons", Price = 620, Currency = "Coins", Rarity = "Uncommon",
-		Icon = "rbxassetid://110892267", Stackable = false, MaxOwned = 1,
+		Icon = "rbxthumb://type=Asset&id=110892267&w=420&h=420", Stackable = false, MaxOwned = 1,
 		Stats = {Damage = 22, Range = 34},
 	},
 	frost_staff = {
 		Id = "frost_staff", Name = "Frost Staff",
 		Description = "A polished staff that leaves a thin trail of frost behind every spell.",
 		Category = "Weapons", Price = 1450, Currency = "Gems", Rarity = "Epic",
-		Icon = "rbxassetid://26421972", Stackable = false, MaxOwned = 1, Featured = true,
+		Icon = "rbxthumb://type=Asset&id=26421972&w=420&h=420", Stackable = false, MaxOwned = 1, Featured = true,
 		Stats = {Damage = 44, Slow = 18},
 	},
 	shadow_dagger = {
 		Id = "shadow_dagger", Name = "Shadow Dagger",
 		Description = "A narrow blade prized by scouts who prefer to leave no trace.",
 		Category = "Weapons", Price = 2200, Currency = "Coins", Rarity = "Legendary",
-		Icon = "rbxassetid://432461081", Stackable = false, MaxOwned = 1,
+		Icon = "rbxthumb://type=Asset&id=432461081&w=420&h=420", Stackable = false, MaxOwned = 1,
 		Stats = {Damage = 57, Crit = 18},
 	},
 	explorers_lantern = {
@@ -91,7 +91,7 @@ local Items: {[string]: Item} = {
 		Id = "guild_token", Name = "Guild Token",
 		Description = "A polished token accepted by guild merchants for special services.",
 		Category = "Miscellaneous", Price = 15, Currency = "Gems", Rarity = "Rare",
-		Icon = "rbxassetid://124126528", Stackable = true, MaxOwned = 50,
+		Icon = "rbxthumb://type=Asset&id=124126528&w=420&h=420", Stackable = true, MaxOwned = 50,
 	},
 }
 
