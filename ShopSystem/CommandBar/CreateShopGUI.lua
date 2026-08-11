@@ -1,7 +1,8 @@
 --!strict
--- Command Bar installer for the Shop System GUI.
--- Run this script in Roblox Studio's Command Bar. It creates real, editable
--- Instances under StarterGui; no LocalScript builds the interface at runtime.
+-- Shop System GUI installer
+-- Run this entire script once from Roblox Studio's Command Bar.
+-- It creates the complete editable ShopGui hierarchy under StarterGui.
+-- Runtime code only updates these prebuilt instances; it does not construct the UI.
 
 local StarterGui = game:GetService("StarterGui")
 
@@ -10,33 +11,33 @@ if existing then
 	existing:Destroy()
 end
 
-local function instance(className: string, name: string, parent: Instance, properties: {[string]: any}?): Instance
+local function make(className: string, name: string, parent: Instance, properties: {[string]: any}?): Instance
 	local object = Instance.new(className)
 	object.Name = name
-	object.Parent = parent
 	if properties then
 		for property, value in properties do
 			(object :: any)[property] = value
 		end
 	end
+	object.Parent = parent
 	return object
 end
 
 local function corner(parent: Instance, radius: number)
-	instance("UICorner", "Corner", parent, {CornerRadius = UDim.new(0, radius)})
+	make("UICorner", "Corner", parent, {CornerRadius = UDim.new(0, radius)})
 end
 
-local function stroke(parent: Instance, color: Color3, transparency: number, thickness: number)
-	instance("UIStroke", "Stroke", parent, {
+local function border(parent: Instance, color: Color3, transparency: number, thickness: number?)
+	make("UIStroke", "Border", parent, {
 		Color = color,
 		Transparency = transparency,
-		Thickness = thickness,
+		Thickness = thickness or 1,
 		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 	})
 end
 
-local function padding(parent: Instance, top: number, right: number, bottom: number, left: number)
-	instance("UIPadding", "Padding", parent, {
+local function pad(parent: Instance, top: number, right: number, bottom: number, left: number)
+	make("UIPadding", "Padding", parent, {
 		PaddingTop = UDim.new(0, top),
 		PaddingRight = UDim.new(0, right),
 		PaddingBottom = UDim.new(0, bottom),
@@ -44,128 +45,144 @@ local function padding(parent: Instance, top: number, right: number, bottom: num
 	})
 end
 
-local colors = {
-	background = Color3.fromRGB(12, 15, 20),
-	panel = Color3.fromRGB(20, 24, 31),
-	panelRaised = Color3.fromRGB(25, 30, 38),
-	panelSoft = Color3.fromRGB(30, 35, 44),
-	line = Color3.fromRGB(55, 62, 73),
-	text = Color3.fromRGB(244, 246, 249),
-	muted = Color3.fromRGB(155, 163, 175),	
-	accent = Color3.fromRGB(77, 181, 150),
-	accentDark = Color3.fromRGB(42, 120, 97),
-	danger = Color3.fromRGB(226, 104, 104),
+local C = {
+	Canvas = Color3.fromRGB(9, 12, 16),
+	Window = Color3.fromRGB(16, 20, 26),
+	Panel = Color3.fromRGB(20, 25, 32),
+	PanelRaised = Color3.fromRGB(25, 31, 39),
+	PanelSelected = Color3.fromRGB(30, 38, 46),
+	Line = Color3.fromRGB(57, 66, 77),
+	Text = Color3.fromRGB(245, 247, 250),
+	Muted = Color3.fromRGB(145, 155, 168),
+	Soft = Color3.fromRGB(105, 116, 130),
+	Accent = Color3.fromRGB(71, 178, 146),
 }
 
-local gui = instance("ScreenGui", "ShopGui", StarterGui, {
+local gui = make("ScreenGui", "ShopGui", StarterGui, {
 	DisplayOrder = 20,
-	IgnoreGuiInset = false,
-	ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets,
-	ResetOnSpawn = false,
-	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 	Enabled = true,
+	IgnoreGuiInset = false,
+	ResetOnSpawn = false,
+	ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets,
+	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 })
 
-local overlay = instance("Frame", "Overlay", gui, {
-	BackgroundColor3 = Color3.new(0, 0, 0),
-	BackgroundTransparency = 0.42,
+local overlay = make("Frame", "Overlay", gui, {
+	BackgroundColor3 = Color3.fromRGB(4, 6, 8),
+	BackgroundTransparency = 0.24,
 	BorderSizePixel = 0,
 	Size = UDim2.fromScale(1, 1),
 })
 
-local window = instance("Frame", "Window", overlay, {
+local window = make("Frame", "Window", overlay, {
 	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundColor3 = colors.background,
+	BackgroundColor3 = C.Canvas,
 	BorderSizePixel = 0,
 	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromScale(0.88, 0.84),
+	Size = UDim2.fromScale(0.88, 0.86),
 })
-corner(window, 14)
-stroke(window, colors.line, 0.28, 1)
-instance("UISizeConstraint", "WindowSize", window, {
-	MinSize = Vector2.new(310, 430),
-	MaxSize = Vector2.new(1180, 760),
+corner(window, 12)
+border(window, C.Line, 0.42)
+make("UISizeConstraint", "WindowConstraint", window, {
+	MinSize = Vector2.new(720, 520),
+	MaxSize = Vector2.new(1240, 780),
 })
 
-local header = instance("Frame", "Header", window, {
+local header = make("Frame", "Header", window, {
 	BackgroundTransparency = 1,
-	Size = UDim2.new(1, 0, 0, 76),
+	Position = UDim2.fromOffset(24, 18),
+	Size = UDim2.new(1, -48, 0, 58),
 })
-padding(header, 16, 18, 10, 22)
 
-instance("TextLabel", "Title", header, {
+make("TextLabel", "Title", header, {
 	BackgroundTransparency = 1,
 	Font = Enum.Font.GothamBold,
 	Text = "MARKET",
-	TextColor3 = colors.text,
-	TextSize = 26,
+	TextColor3 = C.Text,
+	TextSize = 25,
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Size = UDim2.new(0, 230, 0, 30),
-	Position = UDim2.fromOffset(0, 4),
+	Size = UDim2.fromOffset(260, 28),
 })
-instance("TextLabel", "Subtitle", header, {
+make("TextLabel", "Subtitle", header, {
 	BackgroundTransparency = 1,
 	Font = Enum.Font.Gotham,
 	Text = "Gear, supplies, and useful things for the road.",
-	TextColor3 = colors.muted,
-	TextSize = 12,
+	TextColor3 = C.Muted,
+	TextSize = 11,
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Size = UDim2.new(0, 330, 0, 22),
-	Position = UDim2.fromOffset(0, 35),
+	Position = UDim2.fromOffset(1, 31),
+	Size = UDim2.fromOffset(360, 20),
 })
 
-local currency = instance("Frame", "CurrencyBar", header, {
-	AnchorPoint = Vector2.new(1, 0),
-	BackgroundColor3 = colors.panelRaised,
+local wallet = make("Frame", "Wallet", header, {
+	AnchorPoint = Vector2.new(1, 0.5),
+	BackgroundColor3 = C.Panel,
 	BorderSizePixel = 0,
-	Position = UDim2.new(1, -48, 0, 8),
-	Size = UDim2.new(0, 196, 0, 42),
+	Position = UDim2.new(1, -48, 0.5, 0),
+	Size = UDim2.fromOffset(230, 42),
 })
-corner(currency, 9)
-stroke(currency, colors.line, 0.55, 1)
+corner(wallet, 8)
+border(wallet, C.Line, 0.55)
 
-instance("TextLabel", "Coins", currency, {
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	Text = "◈  2,500",
-	TextColor3 = colors.text,
-	TextSize = 13,
-	TextXAlignment = Enum.TextXAlignment.Center,
-	Size = UDim2.fromScale(0.5, 1),
-})
-instance("TextLabel", "Gems", currency, {
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	Text = "◇  120",
-	TextColor3 = Color3.fromRGB(178, 205, 255),
-	TextSize = 13,
-	TextXAlignment = Enum.TextXAlignment.Center,
-	Position = UDim2.fromScale(0.5, 0),
-	Size = UDim2.fromScale(0.5, 1),
-})
+local function makeCurrency(name: string, x: number, color: Color3)
+	local cell = make("Frame", name, wallet, {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(x, 0),
+		Size = UDim2.fromOffset(106, 42),
+	})
+	make("ImageLabel", "Icon", cell, {
+		BackgroundTransparency = 1,
+		Image = "",
+		ImageColor3 = color,
+		ScaleType = Enum.ScaleType.Fit,
+		Position = UDim2.fromOffset(10, 10),
+		Size = UDim2.fromOffset(22, 22),
+	})
+	make("TextLabel", "Amount", cell, {
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBold,
+		Text = "0",
+		TextColor3 = C.Text,
+		TextSize = 12,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(38, 0),
+		Size = UDim2.fromOffset(66, 42),
+	})
+end
 
-local close = instance("TextButton", "Close", header, {
+makeCurrency("Coins", 0, Color3.fromRGB(231, 187, 76))
+makeCurrency("Gems", 115, Color3.fromRGB(116, 177, 235))
+
+local close = make("TextButton", "Close", header, {
 	AnchorPoint = Vector2.new(1, 0.5),
 	AutoButtonColor = false,
-	BackgroundColor3 = colors.panelRaised,
+	BackgroundColor3 = C.Panel,
 	BorderSizePixel = 0,
-	Position = UDim2.new(1, -4, 0, 29),
-	Size = UDim2.fromOffset(34, 34),
-	Font = Enum.Font.GothamMedium,
-	Text = "×",
-	TextColor3 = colors.muted,
-	TextSize = 22,
+	Font = Enum.Font.GothamBold,
+	Position = UDim2.new(1, 0, 0.5, 0),
+	Size = UDim2.fromOffset(36, 36),
+	Text = "X",
+	TextColor3 = C.Muted,
+	TextSize = 12,
 })
 corner(close, 8)
-stroke(close, colors.line, 0.55, 1)
+border(close, C.Line, 0.5)
 
-local body = instance("Frame", "Body", window, {
-	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(0, 76),
-	Size = UDim2.new(1, 0, 1, -76),
+make("Frame", "HeaderDivider", window, {
+	BackgroundColor3 = C.Line,
+	BackgroundTransparency = 0.72,
+	BorderSizePixel = 0,
+	Position = UDim2.new(0, 24, 0, 88),
+	Size = UDim2.new(1, -48, 0, 1),
 })
 
-local categories = instance("ScrollingFrame", "Categories", body, {
+local body = make("Frame", "Body", window, {
+	BackgroundTransparency = 1,
+	Position = UDim2.fromOffset(24, 104),
+	Size = UDim2.new(1, -48, 1, -128),
+})
+
+local categories = make("ScrollingFrame", "Categories", body, {
 	Active = true,
 	AutomaticCanvasSize = Enum.AutomaticSize.X,
 	BackgroundTransparency = 1,
@@ -173,321 +190,529 @@ local categories = instance("ScrollingFrame", "Categories", body, {
 	CanvasSize = UDim2.new(),
 	ScrollingDirection = Enum.ScrollingDirection.X,
 	ScrollBarThickness = 0,
-	Position = UDim2.fromOffset(20, 0),
-	Size = UDim2.new(1, -40, 0, 42),
+	Size = UDim2.new(1, 0, 0, 38),
 })
-padding(categories, 0, 0, 0, 0)
-local categoryLayout = instance("UIListLayout", "Layout", categories, {
+make("UIListLayout", "Layout", categories, {
 	FillDirection = Enum.FillDirection.Horizontal,
-	Padding = UDim.new(0, 7),
+	Padding = UDim.new(0, 6),
 	SortOrder = Enum.SortOrder.LayoutOrder,
 	VerticalAlignment = Enum.VerticalAlignment.Center,
 })
 
 for index, name in {"Featured", "Weapons", "Tools", "Consumables", "Miscellaneous"} do
-	local button = instance("TextButton", name, categories, {
+	local width = name == "Miscellaneous" and 118 or (name == "Consumables" and 108 or 92)
+	local button = make("TextButton", name, categories, {
 		Active = true,
 		AutoButtonColor = false,
-		BackgroundColor3 = index == 1 and colors.panelSoft or colors.panel,
+		BackgroundColor3 = index == 1 and C.PanelSelected or C.Panel,
 		BorderSizePixel = 0,
 		Font = Enum.Font.GothamMedium,
 		LayoutOrder = index,
-		Size = UDim2.fromOffset(index == 5 and 116 or 92, 34),
+		Size = UDim2.fromOffset(width, 34),
 		Text = name,
-		TextColor3 = index == 1 and colors.text or colors.muted,
-		TextSize = 12,
+		TextColor3 = index == 1 and C.Text or C.Muted,
+		TextSize = 11,
 	})
-	corner(button, 8)
-	stroke(button, colors.line, index == 1 and 0.35 or 0.72, 1)
+	corner(button, 7)
+	border(button, C.Line, index == 1 and 0.3 or 0.7)
 end
 
-local toolbar = instance("Frame", "Toolbar", body, {
+local toolbar = make("Frame", "Toolbar", body, {
 	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(20, 50),
-	Size = UDim2.new(1, -40, 0, 46),
+	Position = UDim2.fromOffset(0, 46),
+	Size = UDim2.new(1, 0, 0, 42),
 })
 
-local search = instance("TextBox", "Search", toolbar, {
-	BackgroundColor3 = colors.panel,
+local search = make("TextBox", "Search", toolbar, {
+	BackgroundColor3 = C.Panel,
 	BorderSizePixel = 0,
 	ClearTextOnFocus = false,
 	Font = Enum.Font.Gotham,
-	PlaceholderColor3 = colors.muted,
-	PlaceholderText = "Search items...",
+	PlaceholderColor3 = C.Soft,
+	PlaceholderText = "Search the market",
 	Text = "",
-	TextColor3 = colors.text,
-	TextSize = 12,
+	TextColor3 = C.Text,
+	TextSize = 11,
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Size = UDim2.new(1, -170, 1, 0),
+	Size = UDim2.new(1, -194, 1, 0),
 })
-corner(search, 8)
-stroke(search, colors.line, 0.55, 1)
-padding(search, 0, 14, 0, 38)
-instance("TextLabel", "Icon", search, {
+corner(search, 7)
+border(search, C.Line, 0.52)
+pad(search, 0, 12, 0, 14)
+
+make("TextButton", "Clear", search, {
+	AnchorPoint = Vector2.new(1, 0.5),
+	AutoButtonColor = false,
 	BackgroundTransparency = 1,
 	Font = Enum.Font.GothamMedium,
-	Text = "⌕",
-	TextColor3 = colors.muted,
-	TextSize = 19,
-	Position = UDim2.fromOffset(12, 0),
-	Size = UDim2.fromOffset(20, 46),
+	Position = UDim2.new(1, -9, 0.5, 0),
+	Size = UDim2.fromOffset(42, 24),
+	Text = "CLEAR",
+	TextColor3 = C.Soft,
+	TextSize = 8,
+	Visible = false,
 })
 
-local sort = instance("TextButton", "Sort", toolbar, {
+local sort = make("TextButton", "Sort", toolbar, {
 	AnchorPoint = Vector2.new(1, 0),
 	AutoButtonColor = false,
-	BackgroundColor3 = colors.panel,
+	BackgroundColor3 = C.Panel,
 	BorderSizePixel = 0,
 	Font = Enum.Font.GothamMedium,
 	Position = UDim2.new(1, 0, 0, 0),
-	Size = UDim2.fromOffset(154, 46),
-	Text = "Sort: Featured  ▾",
-	TextColor3 = colors.text,
-	TextSize = 12,
+	Size = UDim2.fromOffset(182, 42),
+	Text = "SORT  /  FEATURED",
+	TextColor3 = C.Text,
+	TextSize = 10,
 })
-corner(sort, 8)
-stroke(sort, colors.line, 0.55, 1)
+corner(sort, 7)
+border(sort, C.Line, 0.52)
 
-local content = instance("Frame", "Content", body, {
+local content = make("Frame", "Content", body, {
 	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(20, 104),
-	Size = UDim2.new(1, -40, 1, -124),
+	Position = UDim2.fromOffset(0, 102),
+	Size = UDim2.new(1, 0, 1, -102),
 })
 
-local gridContainer = instance("Frame", "GridContainer", content, {
+local gridContainer = make("Frame", "GridContainer", content, {
 	BackgroundTransparency = 1,
-	Size = UDim2.new(0.63, -8, 1, 0),
+	Size = UDim2.new(0.65, -8, 1, 0),
 })
 
-local grid = instance("ScrollingFrame", "ItemGrid", gridContainer, {
+local itemGrid = make("ScrollingFrame", "ItemGrid", gridContainer, {
 	Active = true,
 	AutomaticCanvasSize = Enum.AutomaticSize.Y,
 	BackgroundTransparency = 1,
 	BorderSizePixel = 0,
 	CanvasSize = UDim2.new(),
-	ScrollBarImageColor3 = colors.line,
+	ScrollBarImageColor3 = C.Line,
+	ScrollBarImageTransparency = 0.25,
 	ScrollBarThickness = 4,
 	ScrollingDirection = Enum.ScrollingDirection.Y,
 	Size = UDim2.fromScale(1, 1),
 })
-padding(grid, 2, 8, 10, 2)
-instance("UIGridLayout", "GridLayout", grid, {
-	CellPadding = UDim2.fromOffset(10, 10),
-	CellSize = UDim2.new(0.333, -7, 0, 178),
-	FillDirectionMaxCells = 3,
+pad(itemGrid, 1, 8, 12, 1)
+make("UIGridLayout", "GridLayout", itemGrid, {
+	CellPadding = UDim2.fromOffset(9, 9),
+	CellSize = UDim2.new(0.5, -5, 0, 190),
+	FillDirectionMaxCells = 2,
 	SortOrder = Enum.SortOrder.LayoutOrder,
 })
 
-local empty = instance("Frame", "EmptyState", gridContainer, {
+local empty = make("Frame", "EmptyState", gridContainer, {
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	BackgroundTransparency = 1,
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(250, 120),
+	Position = UDim2.fromScale(0.5, 0.46),
+	Size = UDim2.fromOffset(300, 120),
 	Visible = false,
 })
-instance("TextLabel", "Title", empty, {
+make("TextLabel", "Title", empty, {
 	BackgroundTransparency = 1,
 	Font = Enum.Font.GothamBold,
-	Text = "Nothing here",
-	TextColor3 = colors.text,
-	TextSize = 16,
-	Size = UDim2.new(1, 0, 0, 28),
+	Text = "NO RESULTS",
+	TextColor3 = C.Text,
+	TextSize = 15,
+	Size = UDim2.new(1, 0, 0, 24),
 })
-instance("TextLabel", "Message", empty, {
+make("TextLabel", "Message", empty, {
 	BackgroundTransparency = 1,
 	Font = Enum.Font.Gotham,
-	Text = "Try a different search or category.",
-	TextColor3 = colors.muted,
-	TextSize = 12,
+	Text = "Nothing matches the current search or category.",
+	TextColor3 = C.Muted,
+	TextSize = 11,
 	TextWrapped = true,
-	Position = UDim2.fromOffset(0, 34),
+	Position = UDim2.fromOffset(0, 30),
 	Size = UDim2.new(1, 0, 0, 42),
 })
 
-local details = instance("Frame", "Details", content, {
+local details = make("Frame", "Details", content, {
 	AnchorPoint = Vector2.new(1, 0),
-	BackgroundColor3 = colors.panel,
+	BackgroundColor3 = C.Panel,
 	BorderSizePixel = 0,
 	Position = UDim2.new(1, 0, 0, 0),
-	Size = UDim2.new(0.37, -2, 1, 0),
+	Size = UDim2.new(0.35, -1, 1, 0),
 })
-corner(details, 11)
-stroke(details, colors.line, 0.48, 1)
-padding(details, 16, 16, 16, 16)
+corner(details, 9)
+border(details, C.Line, 0.48)
+pad(details, 14, 14, 14, 14)
 
-local detailIcon = instance("Frame", "IconFrame", details, {
-	BackgroundColor3 = colors.panelRaised,
+make("TextButton", "Back", details, {
+	AutoButtonColor = false,
+	BackgroundTransparency = 1,
+	Font = Enum.Font.GothamMedium,
+	Position = UDim2.fromOffset(0, 0),
+	Size = UDim2.fromOffset(70, 28),
+	Text = "BACK",
+	TextColor3 = C.Muted,
+	TextSize = 9,
+	Visible = false,
+})
+
+local media = make("Frame", "Media", details, {
+	BackgroundColor3 = C.PanelRaised,
 	BorderSizePixel = 0,
-	Size = UDim2.new(1, 0, 0, 190),
+	Position = UDim2.fromOffset(0, 0),
+	Size = UDim2.new(1, 0, 0, 188),
 })
-corner(detailIcon, 10)
-stroke(detailIcon, colors.line, 0.55, 1)
-instance("ImageLabel", "Icon", detailIcon, {
+corner(media, 8)
+border(media, C.Line, 0.62)
+make("ImageLabel", "ItemImage", media, {
+	AnchorPoint = Vector2.new(0.5, 0.5),
 	BackgroundTransparency = 1,
-	Image = "rbxasset://textures/ui/GuiImagePlaceholder.png",
-	ImageTransparency = 0.35,
+	Image = "",
 	ScaleType = Enum.ScaleType.Fit,
-	Size = UDim2.fromScale(0.58, 0.58),
-	Position = UDim2.fromScale(0.21, 0.18),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.fromScale(0.72, 0.72),
 })
-instance("TextLabel", "Glyph", detailIcon, {
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	Text = "◆",
-	TextColor3 = colors.accent,
-	TextSize = 48,
-	Size = UDim2.fromScale(1, 1),
+make("Frame", "RarityMark", media, {
+	AnchorPoint = Vector2.new(0, 1),
+	BackgroundColor3 = C.Accent,
+	BorderSizePixel = 0,
+	Position = UDim2.new(0, 10, 1, -10),
+	Size = UDim2.fromOffset(5, 30),
 })
 
-instance("TextLabel", "Rarity", details, {
+make("TextLabel", "Rarity", details, {
 	BackgroundTransparency = 1,
 	Font = Enum.Font.GothamBold,
 	Text = "COMMON",
-	TextColor3 = colors.accent,
-	TextSize = 10,
+	TextColor3 = C.Muted,
+	TextSize = 9,
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Position = UDim2.fromOffset(0, 202),
+	Position = UDim2.fromOffset(0, 198),
 	Size = UDim2.new(1, 0, 0, 18),
 })
-instance("TextLabel", "Name", details, {
+make("TextLabel", "Name", details, {
 	BackgroundTransparency = 1,
 	Font = Enum.Font.GothamBold,
 	Text = "Iron Sword",
-	TextColor3 = colors.text,
-	TextSize = 20,
+	TextColor3 = C.Text,
+	TextSize = 21,
 	TextTruncate = Enum.TextTruncate.AtEnd,
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Position = UDim2.fromOffset(0, 220),
+	Position = UDim2.fromOffset(0, 216),
 	Size = UDim2.new(1, 0, 0, 28),
 })
-instance("TextLabel", "Description", details, {
+make("TextLabel", "Description", details, {
 	BackgroundTransparency = 1,
 	Font = Enum.Font.Gotham,
-	Text = "A dependable blade for new adventurers.",
-	TextColor3 = colors.muted,
-	TextSize = 12,
+	Text = "",
+	TextColor3 = C.Muted,
+	TextSize = 11,
 	TextWrapped = true,
 	TextXAlignment = Enum.TextXAlignment.Left,
 	TextYAlignment = Enum.TextYAlignment.Top,
-	Position = UDim2.fromOffset(0, 252),
+	Position = UDim2.fromOffset(0, 248),
 	Size = UDim2.new(1, 0, 0, 54),
 })
 
-local stats = instance("Frame", "Stats", details, {
-	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(0, 312),
-	Size = UDim2.new(1, 0, 0, 72),
-})
-instance("TextLabel", "Damage", stats, {
-	BackgroundColor3 = colors.panelRaised,
+local stats = make("Frame", "Stats", details, {
+	BackgroundColor3 = C.PanelRaised,
 	BorderSizePixel = 0,
-	Font = Enum.Font.GothamMedium,
-	Text = "DAMAGE   15",
-	TextColor3 = colors.text,
-	TextSize = 11,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Position = UDim2.fromOffset(0, 0),
-	Size = UDim2.new(1, 0, 0, 30),
+	Position = UDim2.fromOffset(0, 310),
+	Size = UDim2.new(1, 0, 0, 74),
 })
-corner(stats:FindFirstChild("Damage") :: Instance, 7)
-padding(stats:FindFirstChild("Damage") :: Instance, 0, 10, 0, 10)
-instance("TextLabel", "Owned", stats, {
+corner(stats, 7)
+border(stats, C.Line, 0.68)
+pad(stats, 8, 10, 8, 10)
+make("UIListLayout", "Layout", stats, {
+	FillDirection = Enum.FillDirection.Vertical,
+	Padding = UDim.new(0, 3),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+})
+for index = 1, 3 do
+	make("TextLabel", "Row" .. index, stats, {
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamMedium,
+		LayoutOrder = index,
+		Text = "",
+		TextColor3 = C.Text,
+		TextSize = 9,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Size = UDim2.new(1, 0, 0, 16),
+		Visible = false,
+	})
+end
+
+make("TextLabel", "Ownership", details, {
 	BackgroundTransparency = 1,
 	Font = Enum.Font.GothamMedium,
-	Text = "Owned  •  0",
-	TextColor3 = colors.muted,
-	TextSize = 11,
+	Text = "Owned 0",
+	TextColor3 = C.Muted,
+	TextSize = 9,
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Position = UDim2.fromOffset(0, 38),
-	Size = UDim2.new(1, 0, 0, 24),
+	Position = UDim2.fromOffset(0, 394),
+	Size = UDim2.new(0.5, 0, 0, 20),
 })
 
-local purchase = instance("TextButton", "Purchase", details, {
+local purchase = make("TextButton", "Purchase", details, {
+	AnchorPoint = Vector2.new(1, 1),
 	AutoButtonColor = false,
-	BackgroundColor3 = colors.accent,
+	BackgroundColor3 = C.Accent,
 	BorderSizePixel = 0,
 	Font = Enum.Font.GothamBold,
-	Position = UDim2.new(0, 0, 1, -50),
-	Size = UDim2.new(1, 0, 0, 46),
-	Text = "Purchase   •   ◈ 250",
-	TextColor3 = Color3.fromRGB(9, 30, 24),
-	TextSize = 13,
+	Position = UDim2.new(1, 0, 1, 0),
+	Size = UDim2.new(1, 0, 0, 44),
+	Text = "PURCHASE",
+	TextColor3 = Color3.fromRGB(7, 20, 17),
+	TextSize = 11,
 })
-corner(purchase, 8)
+corner(purchase, 7)
 
-local modal = instance("Frame", "ConfirmModal", overlay, {
-	AnchorPoint = Vector2.new(0.5, 0.5),
-	BackgroundColor3 = colors.panel,
-	BorderSizePixel = 0,
-	Position = UDim2.fromScale(0.5, 0.5),
-	Size = UDim2.fromOffset(360, 210),
-	Visible = false,
-	ZIndex = 50,
-})
-corner(modal, 12)
-stroke(modal, colors.line, 0.35, 1)
-padding(modal, 20, 20, 20, 20)
-instance("TextLabel", "Title", modal, {
-	BackgroundTransparency = 1,
-	Font = Enum.Font.GothamBold,
-	Text = "Confirm purchase",
-	TextColor3 = colors.text,
-	TextSize = 19,
-	TextXAlignment = Enum.TextXAlignment.Left,
-	Size = UDim2.new(1, 0, 0, 28),
-	ZIndex = 51,
-})
-instance("TextLabel", "Message", modal, {
+make("TextLabel", "PurchaseHint", details, {
+	AnchorPoint = Vector2.new(1, 1),
 	BackgroundTransparency = 1,
 	Font = Enum.Font.Gotham,
-	Text = "Purchase Emberblade for ◈ 850?",
-	TextColor3 = colors.muted,
-	TextSize = 12,
+	Position = UDim2.new(1, 0, 1, -48),
+	Size = UDim2.new(1, 0, 0, 18),
+	Text = "",
+	TextColor3 = C.Soft,
+	TextSize = 8,
+	TextXAlignment = Enum.TextXAlignment.Right,
+})
+
+-- Prebuilt card pool. The LocalScript only changes properties and visibility.
+for index = 1, 24 do
+	local card = make("Frame", string.format("Card%02d", index), itemGrid, {
+		BackgroundColor3 = C.Panel,
+		BorderSizePixel = 0,
+		LayoutOrder = index,
+		Visible = false,
+	})
+	corner(card, 8)
+	border(card, C.Line, 0.66)
+
+	local mediaCard = make("Frame", "Media", card, {
+		BackgroundColor3 = C.PanelRaised,
+		BorderSizePixel = 0,
+		Position = UDim2.fromOffset(7, 7),
+		Size = UDim2.new(1, -14, 0, 112),
+	})
+	corner(mediaCard, 6)
+	make("ImageLabel", "ItemImage", mediaCard, {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		BackgroundTransparency = 1,
+		Image = "",
+		ScaleType = Enum.ScaleType.Fit,
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(0.74, 0.74),
+	})
+	make("Frame", "RarityBar", mediaCard, {
+		AnchorPoint = Vector2.new(0, 1),
+		BackgroundColor3 = C.Muted,
+		BorderSizePixel = 0,
+		Position = UDim2.new(0, 8, 1, -8),
+		Size = UDim2.fromOffset(4, 24),
+	})
+	make("TextLabel", "Name", card, {
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBold,
+		Text = "",
+		TextColor3 = C.Text,
+		TextSize = 11,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(8, 124),
+		Size = UDim2.new(1, -16, 0, 18),
+	})
+	make("TextLabel", "Rarity", card, {
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamMedium,
+		Text = "",
+		TextColor3 = C.Muted,
+		TextSize = 8,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(8, 144),
+		Size = UDim2.new(0.52, -8, 0, 14),
+	})
+	make("ImageLabel", "CurrencyIcon", card, {
+		BackgroundTransparency = 1,
+		Image = "",
+		ScaleType = Enum.ScaleType.Fit,
+		Position = UDim2.new(1, -65, 0, 145),
+		Size = UDim2.fromOffset(12, 12),
+	})
+	make("TextLabel", "Price", card, {
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBold,
+		Text = "",
+		TextColor3 = C.Text,
+		TextSize = 9,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Position = UDim2.new(1, -48, 0, 143),
+		Size = UDim2.fromOffset(40, 16),
+	})
+	make("TextLabel", "Owned", card, {
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamMedium,
+		Text = "",
+		TextColor3 = C.Soft,
+		TextSize = 8,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(8, 160),
+		Size = UDim2.new(0.55, -8, 0, 14),
+	})
+	make("TextButton", "Select", card, {
+		Active = true,
+		AutoButtonColor = false,
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		Size = UDim2.fromScale(1, 1),
+		Text = "",
+		ZIndex = 5,
+	})
+end
+
+local modal = make("Frame", "ConfirmModal", overlay, {
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	BackgroundColor3 = C.Panel,
+	BorderSizePixel = 0,
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.fromOffset(420, 300),
+	Visible = false,
+	ZIndex = 30,
+})
+corner(modal, 10)
+border(modal, C.Line, 0.38)
+pad(modal, 20, 20, 20, 20)
+make("TextLabel", "Title", modal, {
+	BackgroundTransparency = 1,
+	Font = Enum.Font.GothamBold,
+	Text = "CONFIRM PURCHASE",
+	TextColor3 = C.Text,
+	TextSize = 16,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Size = UDim2.new(1, 0, 0, 24),
+	ZIndex = 31,
+})
+make("TextLabel", "Message", modal, {
+	BackgroundTransparency = 1,
+	Font = Enum.Font.Gotham,
+	Text = "",
+	TextColor3 = C.Muted,
+	TextSize = 11,
 	TextWrapped = true,
 	TextXAlignment = Enum.TextXAlignment.Left,
-	Position = UDim2.fromOffset(0, 38),
-	Size = UDim2.new(1, 0, 0, 48),
-	ZIndex = 51,
+	Position = UDim2.fromOffset(0, 34),
+	Size = UDim2.new(1, 0, 0, 42),
+	ZIndex = 31,
 })
-local cancel = instance("TextButton", "Cancel", modal, {
-	AutoButtonColor = false,
-	BackgroundColor3 = colors.panelRaised,
+make("ImageLabel", "ItemImage", modal, {
+	BackgroundColor3 = C.PanelRaised,
 	BorderSizePixel = 0,
-	Font = Enum.Font.GothamMedium,
-	Position = UDim2.new(0, 0, 1, -52),
-	Size = UDim2.new(0.48, -4, 0, 40),
-	Text = "Cancel",
-	TextColor3 = colors.text,
-	TextSize = 12,
-	ZIndex = 51,
+	Image = "",
+	ScaleType = Enum.ScaleType.Fit,
+	Position = UDim2.fromOffset(0, 92),
+	Size = UDim2.fromOffset(92, 92),
+	ZIndex = 31,
 })
-corner(cancel, 8)
-local confirm = instance("TextButton", "Confirm", modal, {
+corner(modal.ItemImage, 7)
+make("TextLabel", "ItemName", modal, {
+	BackgroundTransparency = 1,
+	Font = Enum.Font.GothamBold,
+	Text = "",
+	TextColor3 = C.Text,
+	TextSize = 14,
+	TextTruncate = Enum.TextTruncate.AtEnd,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Position = UDim2.fromOffset(108, 98),
+	Size = UDim2.new(1, -108, 0, 22),
+	ZIndex = 31,
+})
+make("TextLabel", "Price", modal, {
+	BackgroundTransparency = 1,
+	Font = Enum.Font.GothamBold,
+	Text = "",
+	TextColor3 = C.Accent,
+	TextSize = 12,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Position = UDim2.fromOffset(108, 127),
+	Size = UDim2.new(1, -108, 0, 20),
+	ZIndex = 31,
+})
+local cancel = make("TextButton", "Cancel", modal, {
 	AutoButtonColor = false,
-	BackgroundColor3 = colors.accent,
+	BackgroundColor3 = C.PanelRaised,
 	BorderSizePixel = 0,
 	Font = Enum.Font.GothamBold,
-	Position = UDim2.new(0.52, 4, 1, -52),
-	Size = UDim2.new(0.48, -4, 0, 40),
-	Text = "Confirm",
-	TextColor3 = Color3.fromRGB(9, 30, 24),
-	TextSize = 12,
-	ZIndex = 51,
+	Position = UDim2.new(0, 0, 1, -48),
+	Size = UDim2.new(0.48, -4, 0, 42),
+	Text = "CANCEL",
+	TextColor3 = C.Muted,
+	TextSize = 10,
+	ZIndex = 31,
 })
-corner(confirm, 8)
+corner(cancel, 7)
+border(cancel, C.Line, 0.58)
+local confirm = make("TextButton", "Confirm", modal, {
+	AutoButtonColor = false,
+	BackgroundColor3 = C.Accent,
+	BorderSizePixel = 0,
+	Font = Enum.Font.GothamBold,
+	Position = UDim2.new(0.52, 4, 1, -48),
+	Size = UDim2.new(0.48, -4, 0, 42),
+	Text = "CONFIRM",
+	TextColor3 = Color3.fromRGB(7, 20, 17),
+	TextSize = 10,
+	ZIndex = 31,
+})
+corner(confirm, 7)
 
-local toastContainer = instance("Frame", "ToastContainer", gui, {
-	AnchorPoint = Vector2.new(1, 0),
+local toastContainer = make("Frame", "ToastContainer", gui, {
+	AnchorPoint = Vector2.new(1, 1),
 	BackgroundTransparency = 1,
-	Position = UDim2.new(1, -20, 0, 74),
-	Size = UDim2.fromOffset(320, 260),
-	ZIndex = 100,
+	Position = UDim2.new(1, -24, 1, -24),
+	Size = UDim2.fromOffset(320, 250),
+	ZIndex = 50,
 })
-instance("UIListLayout", "Layout", toastContainer, {
+make("UIListLayout", "Layout", toastContainer, {
+	FillDirection = Enum.FillDirection.Vertical,
 	HorizontalAlignment = Enum.HorizontalAlignment.Right,
-	Padding = UDim.new(0, 8),
+	Padding = UDim.new(0, 7),
 	SortOrder = Enum.SortOrder.LayoutOrder,
-	VerticalAlignment = Enum.VerticalAlignment.Top,
+	VerticalAlignment = Enum.VerticalAlignment.Bottom,
 })
 
-print("ShopGui installed to StarterGui. The GUI is now a normal, editable Studio hierarchy.")
+for index = 1, 4 do
+	local toast = make("Frame", string.format("Toast%02d", index), toastContainer, {
+		BackgroundColor3 = C.Panel,
+		BorderSizePixel = 0,
+		LayoutOrder = index,
+		Size = UDim2.fromOffset(310, 54),
+		Visible = false,
+		ZIndex = 51,
+	})
+	corner(toast, 7)
+	border(toast, C.Line, 0.5)
+	make("Frame", "Accent", toast, {
+		BackgroundColor3 = C.Accent,
+		BorderSizePixel = 0,
+		Size = UDim2.fromOffset(3, 54),
+		ZIndex = 52,
+	})
+	make("TextLabel", "Title", toast, {
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBold,
+		Text = "",
+		TextColor3 = C.Text,
+		TextSize = 9,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(14, 7),
+		Size = UDim2.new(1, -24, 0, 15),
+		ZIndex = 52,
+	})
+	make("TextLabel", "Message", toast, {
+		BackgroundTransparency = 1,
+		Font = Enum.Font.Gotham,
+		Text = "",
+		TextColor3 = C.Muted,
+		TextSize = 9,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Position = UDim2.fromOffset(14, 23),
+		Size = UDim2.new(1, -24, 0, 22),
+		ZIndex = 52,
+	})
+end
+
+print("ShopGui installed. Runtime code will only update the prebuilt hierarchy.")
